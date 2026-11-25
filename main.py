@@ -25,6 +25,15 @@ def main() -> None:
     with open(OUTPUT_PATH, "w", encoding="utf-8", newline="") as handle:
         handle.write(text)
     os.chmod(OUTPUT_PATH, 0o644)
+    # Post-write verification: the file on disk must be exactly the entry
+    # text, one line, and mode 0644 — otherwise fail loudly instead of
+    # shipping a corrupt or unreadable output.
+    with open(OUTPUT_PATH, "r", encoding="utf-8", newline="") as handle:
+        written = handle.read()
+    if written != text:
+        raise SystemExit("post-write verification failed: output differs from entry text")
+    if oct(os.stat(OUTPUT_PATH).st_mode & 0o777) != "0o644":
+        raise SystemExit("post-write verification failed: output mode is not 0644")
 
 
 if __name__ == "__main__":
